@@ -7,7 +7,7 @@
             <p class="pr-2">{{ user.name }}</p>
         </span>
         <div v-if="isMenu" class="bg-gray-100 mr-auto p-2 mt-2 rounded-md absolute justify-items-end">
-            <MyButton class="bg-gray-200 hover:gray-200" @click="handleLogout" text="Cerrar Sessión"/>
+            <Button class="bg-gray-200 hover:gray-200" @click="handleLogout" text="Cerrar Sessión"/>
         </div>
     </div>
 </template>
@@ -18,7 +18,7 @@ import { useAuthStore } from '@/modules/auth/store/storeCredentials';
 import { useRouter } from 'vue-router';
 import { onMounted, ref, reactive } from 'vue';
 import { useCookies } from 'vue3-cookies';
-import MyButton from './MyButton.vue';
+/*import MyButton from './MyButton.vue'; */
 import type { User } from '@/modules/auth/interface/user.interface';
 
 const isMenu = ref(false)
