@@ -1,6 +1,6 @@
 
 <template>
-    <button @click="$emit('click')" class="text-black">ada</button>
+    <button @click="$emit('click')" class="text-black">Example</button>
 </template>
 
 <script setup lang="ts">

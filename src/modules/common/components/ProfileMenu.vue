@@ -18,7 +18,7 @@ import { useAuthStore } from '@/modules/auth/store/storeCredentials';
 import { useRouter } from 'vue-router';
 import { onMounted, ref, reactive } from 'vue';
 import { useCookies } from 'vue3-cookies';
-/*import MyButton from './MyButton.vue'; */
+import Button from './Button.vue';
 import type { User } from '@/modules/auth/interface/user.interface';
 
 const isMenu = ref(false)
