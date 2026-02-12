@@ -3,21 +3,21 @@ import type { NavigationGuardNext, RouteLocationNormalized } from "vue-router";
 
 const { cookies } = useCookies()
 
-export const isAuthGuard =(
+export const isAuthGuard = (
     to: RouteLocationNormalized,
     _from: RouteLocationNormalized,
     next: NavigationGuardNext
 ) => {
     const token = cookies.get('token')
 
-    if(!token){
-        if(to.path !== '/login'){
-            next({name: 'login'})
+    if (token) {
+        if (to.path === '/login') {
+            next({name: 'dashboard'})
             return
         }
-    }else{
-        if(to.path == '/login'){
-            next({name: 'dashboard'})
+    } else {
+        if (to.path !== '/login') {
+            next({name:'login-form'})
             return
         }
     }

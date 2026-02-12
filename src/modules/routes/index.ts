@@ -1,16 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import publicRoutes from '../auth/routes'
+import { isAuthGuard } from '../auth/guards/auth.guard'
 
 const routes =[
     {
-        path: '/',
-        component: ()=>import('@/modules/common/layouts/DefaultLayout.vue'),
+        path: '',
+        name: '',
+        beforeEnter: isAuthGuard,
         children: [
-            {
-                path: 'dashboard',
-                name: 'dashboard',
-                component: ()=>import('@/modules/pages/DashBoard.vue'),
-            }
+
+            ... publicRoutes,
+
         ]
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/modules/common/pages/NotFoundPage.vue')
     }
 ]
 
