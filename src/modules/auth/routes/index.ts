@@ -7,7 +7,7 @@ const publicRoutes = [
             {
                 path: '',
                 name: 'login',
-                component: ()=> import('@/modules/auth/pages/LoginFormPage.vue')
+                component: ()=> import('@/modules/auth/pages/LoginPage.vue')
             }
         ]
     }
