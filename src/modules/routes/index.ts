@@ -1,17 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router'
-
-const routes =[
+import type { RouteRecordRaw } from 'vue-router';
+import { isAuthGuard } from '../auth/guards/auth.guard'
+import privateRoutes from '../common/routes';
+import publicRoutes from '../auth/routes';
+const routes : RouteRecordRaw[] =[
     {
-        path: '/',
-        component: ()=>import('@/modules/common/layouts/DefaultLayout.vue'),
+        path: '',
+        name: '',
+        beforeEnter: isAuthGuard,
         children: [
+
+            ...publicRoutes,
+            
+            ...privateRoutes,
             {
-                path: 'dashboard',
-                name: 'dashboard',
-                component: ()=>import('@/modules/pages/DashBoard.vue'),
+                path: '/:pathMatch(.*)*',
+                name: 'NotFound',
+                component: () => import('@/modules/common/pages/NotFoundPage.vue')
             }
         ]
-    }
+    },
 ]
 
 const router = createRouter({
