@@ -102,7 +102,7 @@ async function handleSumbit(){
     const response = await login(credentials.value);
     
     if(response && response.status === 200){
-        console.log('SIIIIIIII')
+        router.push({name: 'home'})
     }
 }
 </script>

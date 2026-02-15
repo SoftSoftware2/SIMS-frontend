@@ -1,4 +1,6 @@
-const publicRoutes = [
+import type { RouteRecordRaw } from 'vue-router';
+
+const publicRoutes : RouteRecordRaw[] = [
     {
         path: '/login',
         name: 'private',

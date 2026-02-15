@@ -12,12 +12,12 @@ export const isAuthGuard = (
 
     if (token) {
         if (to.path === '/login') {
-            next({name: 'dashboard'})
+            next({name: 'home'})
             return
         }
     } else {
         if (to.path !== '/login') {
-            next({name:'login-form'})
+            next({name:'login'})
             return
         }
     }
