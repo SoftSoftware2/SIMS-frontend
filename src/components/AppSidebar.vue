@@ -1,39 +1,157 @@
 <script setup lang="ts">
 import type { SidebarProps } from '@/components/ui/sidebar'
-import SearchForm from '@/components/SearchForm.vue'
-import VersionSwitcher from '@/components/VersionSwitcher.vue'
+
+import {
+  BookOpen,
+  Bot,
+  Command,
+  Frame,
+  LifeBuoy,
+  Map,
+  PieChart,
+  Send,
+  Settings2,
+  SquareTerminal,
+} from "lucide-vue-next"
+
+import NavMain from '@/components/NavMain.vue'
+import NavProjects from '@/components/NavProjects.vue'
+import NavSecondary from '@/components/NavSecondary.vue'
+import NavUser from '@/components/NavUser.vue'
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from '@/components/ui/sidebar'
 
-const props = defineProps<SidebarProps>()
+const props = withDefaults(defineProps<SidebarProps>(), {
+  variant: "inset",
+})
 
-// This is sample data.
 const data = {
-  versions: ["SIMS"],
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  },
   navMain: [
     {
-      title: "Getting Started",
+      title: "Playground",
       url: "#",
+      icon: SquareTerminal,
+      isActive: true,
       items: [
         {
-          title: "Installation",
+          title: "History",
           url: "#",
         },
         {
-          title: "Project Structure",
+          title: "Starred",
+          url: "#",
+        },
+        {
+          title: "Settings",
           url: "#",
         },
       ],
+    },
+    {
+      title: "Models",
+      url: "#",
+      icon: Bot,
+      items: [
+        {
+          title: "Genesis",
+          url: "#",
+        },
+        {
+          title: "Explorer",
+          url: "#",
+        },
+        {
+          title: "Quantum",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Documentation",
+      url: "#",
+      icon: BookOpen,
+      items: [
+        {
+          title: "Introduction",
+          url: "#",
+        },
+        {
+          title: "Get Started",
+          url: "#",
+        },
+        {
+          title: "Tutorials",
+          url: "#",
+        },
+        {
+          title: "Changelog",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      url: "#",
+      icon: Settings2,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+  ],
+  navSecondary: [
+    {
+      title: "Support",
+      url: "#",
+      icon: LifeBuoy,
+    },
+    {
+      title: "Feedback",
+      url: "#",
+      icon: Send,
+    },
+  ],
+  projects: [
+    {
+      name: "Design Engineering",
+      url: "#",
+      icon: Frame,
+    },
+    {
+      name: "Sales & Marketing",
+      url: "#",
+      icon: PieChart,
+    },
+    {
+      name: "Travel",
+      url: "#",
+      icon: Map,
     },
   ],
 }
@@ -42,25 +160,29 @@ const data = {
 <template>
   <Sidebar v-bind="props">
     <SidebarHeader>
-      <VersionSwitcher
-        :versions="data.versions"
-        :default-version="data.versions[0]"
-      />
-      <SearchForm />
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" as-child>
+            <a href="#">
+              <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Command class="size-4" />
+              </div>
+              <div class="grid flex-1 text-left text-sm leading-tight">
+                <span class="truncate font-medium">SIMS</span>
+                <span class="truncate text-xs">SoftSoftware</span>
+              </div>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
     </SidebarHeader>
     <SidebarContent>
-      <SidebarGroup v-for="item in data.navMain" :key="item.title">
-        <SidebarGroupLabel>{{ item.title }}</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem v-for="childItem in item.items" :key="childItem.title">
-              <SidebarMenuButton as-child :is-active="childItem.isActive">
-                <a :href="childItem.url">{{ childItem.title }}</a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+      <NavMain :items="data.navMain" />
+      <NavProjects :projects="data.projects" />
+      <NavSecondary :items="data.navSecondary" class="mt-auto" />
     </SidebarContent>
+    <SidebarFooter>
+      <NavUser :user="data.user" />
+    </SidebarFooter>
   </Sidebar>
 </template>

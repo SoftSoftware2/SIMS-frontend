@@ -36,8 +36,7 @@ const selectedVersion = ref(props.defaultVersion)
               <GalleryVerticalEnd class="size-4" />
             </div>
             <div class="flex flex-col gap-0.5 leading-none">
-              <span class="font-medium">Documentation</span>
-              <span class="">{{ selectedVersion }}</span>
+              <span class="font-medium">SIMS</span>
             </div>
           </SidebarMenuButton>
         </DropdownMenuTrigger>
