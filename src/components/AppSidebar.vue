@@ -12,6 +12,7 @@ import {
   Send,
   Settings2,
   SquareTerminal,
+  Building2,
 } from "lucide-vue-next"
 
 import NavMain from '@/components/NavMain.vue'
@@ -39,6 +40,18 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
+    {
+      title: "Administración",
+      url: "/app/companies",
+      icon: Building2,
+      isActive: true,
+      items: [
+        {
+          title: "Empresas",
+          url: "/app/companies",
+        },
+      ],
+    },
     {
       title: "Playground",
       url: "#",
