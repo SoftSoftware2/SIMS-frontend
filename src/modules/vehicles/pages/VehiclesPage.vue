@@ -74,16 +74,16 @@ const getStatusLabel = (status: VehicleStatus) => {
   return option?.label || status;
 };
 
-const getStatusVariant = (status: VehicleStatus): 'default' | 'secondary' | 'destructive' => {
+const getStatusBadgeClass = (status: VehicleStatus): string => {
   switch (status) {
     case 'available':
-      return 'default';
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
     case 'using':
-      return 'secondary';
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
     case 'stopped':
-      return 'destructive';
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
     default:
-      return 'default';
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
   }
 };
 
@@ -218,7 +218,7 @@ onUnmounted(() => {
                 <TableCell class="font-medium">{{ vehicle.license }}</TableCell>
                 <TableCell>{{ vehicle.vehicle_type?.name || '-' }}</TableCell>
                 <TableCell>
-                  <Badge :variant="getStatusVariant(vehicle.status)">
+                  <Badge :class="getStatusBadgeClass(vehicle.status)" class="font-medium">
                     {{ getStatusLabel(vehicle.status) }}
                   </Badge>
                 </TableCell>

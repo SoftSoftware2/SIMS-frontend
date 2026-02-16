@@ -13,7 +13,6 @@ import {
   Settings2,
   SquareTerminal,
   Building2,
-  Truck,
 } from "lucide-vue-next"
 
 import NavMain from '@/components/NavMain.vue'

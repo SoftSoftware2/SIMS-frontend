@@ -30,7 +30,7 @@ const getMarkerColor = (status: string) => {
     case 'available':
       return '#22c55e'; // green
     case 'using':
-      return '#eab308'; // yellow
+      return '#3b82f6'; // blue
     case 'stopped':
       return '#ef4444'; // red
     default:
@@ -51,11 +51,7 @@ const getStatusLabel = (status: string) => {
   }
 };
 
-const activeInfoWindow = ref<number | null>(null);
-
-const toggleInfoWindow = (vehicleId: number) => {
-  activeInfoWindow.value = activeInfoWindow.value === vehicleId ? null : vehicleId;
-};
+const hoveredVehicleId = ref<number | null>(null);
 </script>
 
 <template>
@@ -77,17 +73,22 @@ const toggleInfoWindow = (vehicleId: number) => {
             path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
             fillColor: getMarkerColor(vehicle.status),
             fillOpacity: 1,
-            strokeColor: props.highlightedVehicleId === vehicle.id ? '#000000' : '#ffffff',
-            strokeWeight: props.highlightedVehicleId === vehicle.id ? 3 : 2,
+            strokeColor: '#ffffff',
+            strokeWeight: 1,
             scale: props.highlightedVehicleId === vehicle.id ? 2 : 1.5,
             anchor: { x: 12, y: 24 }
           }
         }"
-        @click="toggleInfoWindow(vehicle.id)"
-        @mouseover="emit('highlight', vehicle.id)"
-        @mouseout="emit('highlight', null)"
+        @mouseover="() => {
+          emit('highlight', vehicle.id);
+          hoveredVehicleId = vehicle.id;
+        }"
+        @mouseout="() => {
+          emit('highlight', null);
+          hoveredVehicleId = null;
+        }"
       >
-        <InfoWindow v-if="activeInfoWindow === vehicle.id">
+        <InfoWindow v-if="hoveredVehicleId === vehicle.id">
           <div class="p-2 min-w-[200px]">
             <h3 class="font-bold text-lg mb-2">{{ vehicle.license }}</h3>
             <div class="space-y-1 text-sm">
