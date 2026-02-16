@@ -26,3 +26,15 @@ export interface PutAdminResponse{
 export interface DeleteAdminResponse{
     message: string;
 }
+
+export interface CreateAdminRequest{
+    email: string;
+    name: string;
+    password: string;
+}
+
+export interface UpdateAdminRequest{
+    email?: string;
+    name?: string;
+    password?: string;
+}

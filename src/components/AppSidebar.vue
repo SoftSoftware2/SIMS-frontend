@@ -50,6 +50,10 @@ const data = {
           title: "Empresas",
           url: "/app/companies",
         },
+        {
+          title: "Admins",
+          url: "/app/admins",
+        },
       ],
     },
   ]

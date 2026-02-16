@@ -103,6 +103,8 @@ async function handleSumbit(){
     
     if(response && response.status === 200){
         router.push({name: 'home'})
+    }else{
+      console.log(response)
     }
 }
 </script>

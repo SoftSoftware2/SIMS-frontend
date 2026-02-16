@@ -1,6 +1,7 @@
 import type { RouteRecordRaw } from "vue-router";
 import homeRoutes from "@/modules/home/routes";
 import companiesRoutes from "@/modules/companies/routes";
+import adminRoutes from "@/modules/admin/routes";
 
 const privateRoutes : RouteRecordRaw[] = [
     {
@@ -10,6 +11,7 @@ const privateRoutes : RouteRecordRaw[] = [
         children:[
             ... homeRoutes,
             ... companiesRoutes,
+            ... adminRoutes,
         ]
     }
 ];
