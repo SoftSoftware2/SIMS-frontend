@@ -1,27 +1,3 @@
-<script setup lang="ts">
-import { onMounted } from 'vue';
-import { useCompanies } from '../composables/useCompanies';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Plus, RefreshCw } from 'lucide-vue-next';
-
-const { companies, isLoading, error, fetchCompanies } = useCompanies();
-
-onMounted(() => {
-  fetchCompanies();
-});
-</script>
-
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
@@ -95,3 +71,27 @@ onMounted(() => {
     </Card>
   </div>
 </template>
+
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import { useCompanies } from '../composables/useCompanies';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Plus, RefreshCw } from 'lucide-vue-next';
+
+const { companies, isLoading, error, fetchCompanies } = useCompanies();
+
+onMounted(() => {
+  fetchCompanies();
+});
+</script>
