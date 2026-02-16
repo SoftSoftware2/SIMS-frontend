@@ -13,6 +13,7 @@ import {
   Settings2,
   SquareTerminal,
   Building2,
+  Truck,
 } from "lucide-vue-next"
 
 import NavMain from '@/components/NavMain.vue'
@@ -42,17 +43,25 @@ const data = {
   navMain: [
     {
       title: "Administración",
-      url: "/companies",
+      url: "/app",
       icon: Building2,
       isActive: true,
       items: [
         {
           title: "Empresas",
-          url: "/companies",
+          url: "/app/companies",
         },
         {
           title: "Admins",
           url: "/app/admins",
+        },
+        {
+          title: "Vehicle Types",
+          url: "/app/vehicle-types",
+        },
+        {
+          title: "Vehicles",
+          url: "/app/vehicles",
         },
       ],
     },
