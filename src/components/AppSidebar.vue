@@ -42,7 +42,7 @@ const data = {
   navMain: [
     {
       title: "Administración",
-      url: "/companies",
+      url: "",
       icon: Building2,
       isActive: true,
       items: [
