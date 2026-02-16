@@ -12,6 +12,7 @@ import {
   Send,
   Settings2,
   SquareTerminal,
+  Building2,
 } from "lucide-vue-next"
 
 import NavMain from '@/components/NavMain.vue'
@@ -40,10 +41,21 @@ const data = {
   },
   navMain: [
     {
+      title: "Administración",
+      url: "/companies",
+      icon: Building2,
+      isActive: true,
+      items: [
+        {
+          title: "Empresas",
+          url: "/companies",
+        },
+      ],
+    },
+    {
       title: "Playground",
       url: "#",
       icon: SquareTerminal,
-      isActive: true,
       items: [
         {
           title: "History",
