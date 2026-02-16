@@ -41,13 +41,13 @@ const data = {
   },
   navMain: [
     {
-      title: "Administración",
+      title: "Administration",
       url: "",
       icon: Building2,
       isActive: true,
       items: [
         {
-          title: "Empresas",
+          title: "Companies",
           url: "/app/companies",
         },
         {

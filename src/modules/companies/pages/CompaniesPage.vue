@@ -1,97 +1,67 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
+  <div class="container mx-auto">
+    <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">Empresas</h1>
-        <p class="text-muted-foreground">
-          Gestiona las empresas registradas en el sistema.
-        </p>
+        <h1 class="text-3xl font-bold tracking-tight">Companies</h1>
+        <p class="text-muted-foreground">Manage system companies</p>
       </div>
-      <div class="flex gap-2">
-        <Button variant="outline" size="icon" @click="fetchCompanies" :disabled="isLoading">
-          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isLoading }" />
-        </Button>
-        <Button>
-          <Plus class="mr-2 h-4 w-4" />
-          Nueva Empresa
-        </Button>
-      </div>
+      <Button @click="router.push({name: 'companies-create'})">
+        New Company
+      </Button>
     </div>
-
-    <Card>
-      <CardHeader>
-        <CardTitle>Listado de Empresas</CardTitle>
-        <CardDescription>
-          Se muestran todas las empresas configuradas con sus respectivas conexiones.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div v-if="isLoading" class="space-y-2">
-          <Skeleton class="h-10 w-full" />
-          <Skeleton class="h-10 w-full" />
-          <Skeleton class="h-10 w-full" />
-        </div>
-
-        <div v-else-if="error" class="p-4 text-center text-destructive">
-          {{ error }}
-        </div>
-
-        <div v-else class="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>CIF</TableHead>
-                <TableHead>Conexión</TableHead>
-                <TableHead>Usuario DB</TableHead>
-                <TableHead class="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="company in companies" :key="company.id">
-                <TableCell class="font-medium">{{ company.name }}</TableCell>
-                <TableCell>{{ company.cif }}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{{ company.db_conexion }}</Badge>
-                </TableCell>
-                <TableCell>{{ company.db_user }}</TableCell>
-                <TableCell class="text-right">
-                  <Button variant="ghost" size="sm">Editar</Button>
-                </TableCell>
-              </TableRow>
-              <TableRow v-if="companies.length === 0">
-                <TableCell colspan="5" class="h-24 text-center">
-                  No se encontraron empresas.
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    
+    <CompanyTable 
+      :companies="companies" 
+      :loading="loading"
+      @edit="(company) => router.push({name: 'companies-edit', params: {id: company.id}})"
+      @delete="handleDelete"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useCompanies } from '../composables/useCompanies';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import CompanyTable from '../components/CompanyTable.vue';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Plus, RefreshCw } from 'lucide-vue-next';
+import type { Company } from '../interfaces/company.interface';
+import { useRouter } from 'vue-router';
 
-const { companies, isLoading, error, fetchCompanies } = useCompanies();
+const { getCompanies, deleteCompany } = useCompanies();
+const router = useRouter();
+
+const companies = ref<Company[]>([]);
+const loading = ref(false);
+
+const loadCompanies = async () => {
+  loading.value = true;
+  try {
+    const response = await getCompanies();
+    if (response) {
+      // The composable already handles the data extraction, but we ensure it matches the list
+      companies.value = Array.isArray(response) ? response : (response as any).data;
+    }
+  } catch (error) {
+    console.error('Error loading companies:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleDelete = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this company?')) {
+    return;
+  }
+  
+  try {
+    await deleteCompany(id);
+    await loadCompanies();
+  } catch (error) {
+    console.error('Error deleting company:', error);
+  }
+};
 
 onMounted(() => {
-  fetchCompanies();
+  loadCompanies();
 });
 </script>
