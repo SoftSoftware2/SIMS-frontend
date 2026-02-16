@@ -18,6 +18,7 @@ const { vehicles, isLoading, error, fetchVehicles, deleteVehicle } = useVehicles
 const isDeleteDialogOpen = ref(false);
 const selectedVehicle = ref<Vehicle | null>(null);
 const highlightedVehicleId = ref<number | null>(null);
+const mapSectionRef = ref<HTMLElement | null>(null);
 
 // Generate fictional GPS coordinates for demonstration
 const deltaCities = [
@@ -57,6 +58,9 @@ let movementInterval: ReturnType<typeof setInterval> | null = null;
 
 const simulateMovement = () => {
   movementInterval = setInterval(() => {
+    // Don't update positions while hovering over a vehicle
+    if (highlightedVehicleId.value !== null) return;
+    
     vehiclesWithDemoGPS.value = vehiclesWithDemoGPS.value.map(vehicle => {
       if (!vehicle.latitude || !vehicle.longitude) return vehicle;
       
@@ -70,6 +74,12 @@ const simulateMovement = () => {
       };
     });
   }, 2000);
+};
+
+const scrollToMap = () => {
+  if (mapSectionRef.value) {
+    mapSectionRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 };
 
 const openDeleteDialog = (vehicle: Vehicle) => {
@@ -137,9 +147,13 @@ onUnmounted(() => {
       @edit="handleEdit"
       @delete="openDeleteDialog"
       @highlight="highlightedVehicleId = $event"
+      @select="(vehicleId) => {
+        highlightedVehicleId = vehicleId;
+        scrollToMap();
+      }"
     />
 
-    <div class="mt-8 rounded-md shadow-2xl p-6 bg-card">
+    <div ref="mapSectionRef" class="mt-8 rounded-md shadow-2xl p-6 bg-card">
       <h2 class="text-2xl font-bold tracking-tight mb-4">Vehicles Map</h2>
       <p class="text-muted-foreground mb-4">
         Real-time visualization of vehicle locations (demonstration data).

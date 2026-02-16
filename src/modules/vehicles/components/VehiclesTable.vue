@@ -30,14 +30,14 @@
           :class="{ 'bg-blue-50 dark:bg-blue-950': highlightedVehicleId === vehicle.id }"
           class="transition-colors cursor-pointer"
         >
-          <TableCell class="font-medium">{{ vehicle.license }}</TableCell>
-          <TableCell>{{ vehicle.vehicle_type?.name || '-' }}</TableCell>
-          <TableCell>
+          <TableCell class="font-medium" @click="emit('select', vehicle.id)">{{ vehicle.license }}</TableCell>
+          <TableCell @click="emit('select', vehicle.id)">{{ vehicle.vehicle_type?.name || '-' }}</TableCell>
+          <TableCell @click="emit('select', vehicle.id)">
             <Badge :class="getStatusBadgeClass(vehicle.status)" class="font-medium">
               {{ getStatusLabel(vehicle.status) }}
             </Badge>
           </TableCell>
-          <TableCell>{{ formatDate(vehicle.created_at) }}</TableCell>
+          <TableCell @click="emit('select', vehicle.id)">{{ formatDate(vehicle.created_at) }}</TableCell>
           <TableCell class="text-right space-x-2">
             <Button 
               variant="default" 
@@ -83,6 +83,7 @@ const emit = defineEmits<{
   edit: [vehicle: Vehicle];
   delete: [vehicle: Vehicle];
   highlight: [vehicleId: number | null];
+  select: [vehicleId: number];
 }>();
 
 const statusOptions = [
