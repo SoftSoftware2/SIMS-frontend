@@ -2,90 +2,22 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useVehicles } from '../composables/useVehicles';
-import type { Vehicle, VehicleStatus } from '../interfaces/vehicle.interface';
+import type { Vehicle } from '../interfaces/vehicle.interface';
 import VehiclesMap from '../components/VehiclesMap.vue';
-import {
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow,
-} from '@/components/ui/table';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } 
-  from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
+import VehiclesTable from '../components/VehiclesTable.vue';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-vue-next';
 
 const router = useRouter();
 const { vehicles, isLoading, error, fetchVehicles, deleteVehicle } = useVehicles();
 
 const isDeleteDialogOpen = ref(false);
 const selectedVehicle = ref<Vehicle | null>(null);
-
 const highlightedVehicleId = ref<number | null>(null);
-
-const mapCardRef = ref<HTMLElement | null>(null);
-
-const statusOptions = [
-  { value: 'available', label: 'Available' },
-  { value: 'using', label: 'In Use' },
-  { value: 'stopped', label: 'Stopped' }
-];
-
-const openDeleteDialog = (vehicle: Vehicle) => {
-  selectedVehicle.value = vehicle;
-  isDeleteDialogOpen.value = true;
-};
-
-const handleDelete = async () => {
-  if (!selectedVehicle.value) return;
-  
-  try {
-    await deleteVehicle(selectedVehicle.value.id);
-    isDeleteDialogOpen.value = false;
-    selectedVehicle.value = null;
-  } catch (err) {
-    // Error is handled in the composable
-  }
-};
-
-// Scroll to map
-const scrollToMap = () => {
-
-  const element = (mapCardRef.value as any)?.$el || mapCardRef.value;
-  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
-
-const formatDate = (dateString?: string) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  });
-};
-
-const getStatusLabel = (status: VehicleStatus) => {
-  const option = statusOptions.find(opt => opt.value === status);
-  return option?.label || status;
-};
-
-const getStatusBadgeClass = (status: VehicleStatus): string => {
-  switch (status) {
-    case 'available':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
-    case 'using':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
-    case 'stopped':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
-  }
-};
 
 // Generate fictional GPS coordinates for demonstration
 const deltaCities = [
@@ -140,6 +72,27 @@ const simulateMovement = () => {
   }, 2000);
 };
 
+const openDeleteDialog = (vehicle: Vehicle) => {
+  selectedVehicle.value = vehicle;
+  isDeleteDialogOpen.value = true;
+};
+
+const handleDelete = async () => {
+  if (!selectedVehicle.value) return;
+  
+  try {
+    await deleteVehicle(selectedVehicle.value.id);
+    isDeleteDialogOpen.value = false;
+    selectedVehicle.value = null;
+  } catch (err) {
+    // Error is handled in the composable
+  }
+};
+
+const handleEdit = (vehicle: Vehicle) => {
+  router.push(`/app/vehicles/${vehicle.id}/edit`);
+};
+
 onMounted(() => {
   fetchVehicles();
   
@@ -157,119 +110,46 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
+  <div class="container mx-auto">
+    <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-3xl font-bold tracking-tight">Vehicles</h1>
-        <p class="text-muted-foreground">
-          Manage the vehicles registered in the system.
-        </p>
+        <p class="text-muted-foreground">Manage the vehicles registered in the system.</p>
       </div>
       <div class="flex gap-2">
         <Button variant="outline" size="icon" @click="fetchVehicles" :disabled="isLoading">
           <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isLoading }" />
         </Button>
         <Button @click="router.push('/app/vehicles/create')">
-          <Plus class="mr-2 h-4 w-4" />
           New Vehicle
         </Button>
       </div>
     </div>
 
-    <Card>
-      <CardHeader>
-        <CardTitle>Vehicles List</CardTitle>
-        <CardDescription>
-          All vehicles registered in the system are displayed.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div v-if="isLoading && vehicles.length === 0" class="space-y-2">
-          <Skeleton class="h-10 w-full" />
-          <Skeleton class="h-10 w-full" />
-          <Skeleton class="h-10 w-full" />
-        </div>
+    <div v-if="error" class="p-4 text-center text-destructive mb-6">
+      {{ error }}
+    </div>
 
-        <div v-else-if="error" class="p-4 text-center text-destructive">
-          {{ error }}
-        </div>
+    <VehiclesTable 
+      :vehicles="vehicles" 
+      :loading="isLoading"
+      :highlighted-vehicle-id="highlightedVehicleId"
+      @edit="handleEdit"
+      @delete="openDeleteDialog"
+      @highlight="highlightedVehicleId = $event"
+    />
 
-        <div v-else class="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>License Plate</TableHead>
-                <TableHead>Vehicle Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Creation Date</TableHead>
-                <TableHead class="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow 
-                v-for="vehicle in vehicles" 
-                :key="vehicle.id"
-                @mouseenter="highlightedVehicleId = vehicle.id"
-                @mouseleave="highlightedVehicleId = null"
-                @click="scrollToMap"
-                :class="{ 'bg-blue-50 dark:bg-blue-950': highlightedVehicleId === vehicle.id }"
-                class="transition-colors cursor-pointer"
-              >
-                <TableCell class="font-medium">{{ vehicle.license }}</TableCell>
-                <TableCell>{{ vehicle.vehicle_type?.name || '-' }}</TableCell>
-                <TableCell>
-                  <Badge :class="getStatusBadgeClass(vehicle.status)" class="font-medium">
-                    {{ getStatusLabel(vehicle.status) }}
-                  </Badge>
-                </TableCell>
-                <TableCell>{{ formatDate(vehicle.created_at) }}</TableCell>
-                <TableCell class="text-right">
-                  <div class="flex justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      @click="router.push(`/app/vehicles/${vehicle.id}/edit`)"
-                      :disabled="isLoading"
-                    >
-                      <Pencil class="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      @click="openDeleteDialog(vehicle)"
-                      :disabled="isLoading"
-                    >
-                      <Trash2 class="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              <TableRow v-if="vehicles.length === 0">
-                <TableCell colspan="5" class="h-24 text-center">
-                  No vehicles found.
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card ref="mapCardRef">
-      <CardHeader>
-        <CardTitle>Vehicles Map</CardTitle>
-        <CardDescription>
-          Real-time visualization of vehicle locations (demonstration data).
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <VehiclesMap 
-          :vehicles="vehiclesWithDemoGPS" 
-          :highlighted-vehicle-id="highlightedVehicleId"
-          @highlight="highlightedVehicleId = $event"
-        />
-      </CardContent>
-    </Card>
+    <div class="mt-8 rounded-md shadow-2xl p-6 bg-card">
+      <h2 class="text-2xl font-bold tracking-tight mb-4">Vehicles Map</h2>
+      <p class="text-muted-foreground mb-4">
+        Real-time visualization of vehicle locations (demonstration data).
+      </p>
+      <VehiclesMap 
+        :vehicles="vehiclesWithDemoGPS" 
+        :highlighted-vehicle-id="highlightedVehicleId"
+        @highlight="highlightedVehicleId = $event"
+      />
+    </div>
 
     <Dialog v-model:open="isDeleteDialogOpen">
       <DialogContent>

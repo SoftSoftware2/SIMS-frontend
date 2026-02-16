@@ -1,91 +1,81 @@
 <template>
-  <div class="container mx-auto py-6">
-    <Card>
+  <div class="container h-full grid grid-rows-[auto_1fr] gap-6">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        {{ isEditMode ? 'Edit Vehicle' : 'Create Vehicle' }}
+      </h1>
+    </div>
+
+    <Card class="border-0 shadow-none h-full">
       <CardHeader>
-        <div class="flex items-center justify-between">
-          <div>
-            <CardTitle>{{ isEditMode ? 'Edit Vehicle' : 'Create Vehicle' }}</CardTitle>
-            <CardDescription>
-              {{ isEditMode ? 'Update vehicle information' : 'Add a new vehicle to the system' }}
-            </CardDescription>
-          </div>
-          <Button variant="outline" @click="router.back()">
-            Cancel
-          </Button>
-        </div>
       </CardHeader>
-      <CardContent>
-        <div v-if="isLoadingData" class="space-y-4">
-          <Skeleton class="h-10 w-full" />
-          <Skeleton class="h-10 w-full" />
-          <Skeleton class="h-10 w-full" />
-        </div>
+      <CardContent class="h-full">
+        <form v-if="!fetchError" @submit.prevent="handleSubmit" class="grid grid-rows-[1fr_auto] h-full gap-6">
+          <div class="grid grid-cols-3 gap-6">
+            <!-- License Plate Field -->
+            <div class="space-y-2">
+              <Label for="license">License Plate *</Label>
+              <Input
+                id="license"
+                v-model="formData.license"
+                placeholder="e.g., ABC-1234"
+                maxlength="15"
+                @input="clearError('license')"
+              />
+              <p v-if="formErrors.license" class="text-sm text-red-500">
+                {{ formErrors.license }}
+              </p>
+            </div>
 
-        <form v-else-if="!fetchError" @submit.prevent="handleSubmit" class="space-y-4">
-          <div class="space-y-2">
-            <Label for="license">License Plate *</Label>
-            <Input
-              id="license"
-              v-model="formData.license"
-              placeholder="Enter license plate"
-              maxlength="15"
-              :class="{ 'border-red-500': formErrors.license }"
-            />
-            <p v-if="formErrors.license" class="text-sm text-red-500">
-              {{ formErrors.license }}
-            </p>
+            <!-- Vehicle Type Field -->
+            <div class="space-y-2">
+              <Label for="vehicle_type_id">Vehicle Type *</Label>
+              <Select v-model="formData.vehicle_type_id" @update:model-value="clearError('vehicle_type_id')">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="type in vehicleTypes"
+                    :key="type.id"
+                    :value="type.id.toString()"
+                  >
+                    {{ type.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p v-if="formErrors.vehicle_type_id" class="text-sm text-red-500">
+                {{ formErrors.vehicle_type_id }}
+              </p>
+            </div>
+
+            <!-- Status Field -->
+            <div class="space-y-2">
+              <Label for="status">Status *</Label>
+              <Select v-model="formData.status">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="using">In Use</SelectItem>
+                  <SelectItem value="stopped">Stopped</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div class="space-y-2">
-            <Label for="vehicle_type_id">Vehicle Type *</Label>
-            <Select v-model="formData.vehicle_type_id">
-              <SelectTrigger :class="{ 'border-red-500': formErrors.vehicle_type_id }">
-                <SelectValue placeholder="Select a vehicle type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="type in vehicleTypes"
-                  :key="type.id"
-                  :value="type.id.toString()"
-                >
-                  {{ type.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p v-if="formErrors.vehicle_type_id" class="text-sm text-red-500">
-              {{ formErrors.vehicle_type_id }}
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="status">Status *</Label>
-            <Select v-model="formData.status">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in statusOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div v-if="error" class="text-sm text-red-500">
-            {{ error }}
-          </div>
-
-          <div class="flex justify-end gap-2">
-            <Button type="button" variant="outline" @click="router.back()">
+          <!-- Form Actions -->
+          <div class="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              @click="router.push('/app/vehicles')"
+            >
               Cancel
             </Button>
             <Button type="submit" :disabled="isLoading || isLoadingTypes">
-              <RefreshCw v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-              {{ isEditMode ? 'Update' : 'Create' }} Vehicle
+              {{ isLoading ? 'Saving...' : (isEditMode ? 'Update' : 'Create') }} Vehicle
             </Button>
           </div>
         </form>
@@ -104,22 +94,19 @@ import { useRouter, useRoute } from 'vue-router';
 import { useVehicles } from '../composables/useVehicles';
 import { useVehicleTypes } from '@/modules/vehicle-types/composables/useVehicleTypes';
 import type { Vehicle, VehicleStatus } from '../interfaces/vehicle.interface';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw } from 'lucide-vue-next';
 import api from '@/config/api';
 
 const router = useRouter();
 const route = useRoute();
-const { isLoading, error, createVehicle, updateVehicle } = useVehicles();
+const { isLoading, createVehicle, updateVehicle } = useVehicles();
 const { vehicleTypes, isLoading: isLoadingTypes, fetchVehicleTypes } = useVehicleTypes();
 
 const vehicle = ref<Vehicle | null>(null);
-const isLoadingData = ref(false);
 const fetchError = ref('');
 
 const isEditMode = computed(() => !!route.params.id);
@@ -135,11 +122,9 @@ const formErrors = reactive({
   vehicle_type_id: ''
 });
 
-const statusOptions = [
-  { value: 'available', label: 'Available' },
-  { value: 'using', label: 'In Use' },
-  { value: 'stopped', label: 'Stopped' }
-];
+const clearError = (field: keyof typeof formErrors) => {
+  formErrors[field] = '';
+};
 
 const validateForm = (): boolean => {
   formErrors.license = '';
@@ -167,7 +152,6 @@ const fetchVehicle = async () => {
   if (!isEditMode.value) return;
   
   try {
-    isLoadingData.value = true;
     const response = await api.get(`/vehicles/${route.params.id}`);
     const vehicleData = response.data.data || response.data;
     vehicle.value = vehicleData;
@@ -177,8 +161,6 @@ const fetchVehicle = async () => {
   } catch (err: any) {
     console.error('Error fetching vehicle:', err);
     fetchError.value = err.response?.data?.message || err.message || 'Failed to load vehicle';
-  } finally {
-    isLoadingData.value = false;
   }
 };
 
