@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useVehicles } from '../composables/useVehicles';
-import { useVehicleTypes } from '@/modules/vehicle-types/composables/useVehicleTypes';
 import type { Vehicle, VehicleStatus } from '../interfaces/vehicle.interface';
+import VehiclesMap from '../components/VehiclesMap.vue';
 import {
   Table, TableBody, TableCell, TableHead, 
   TableHeader, TableRow,
@@ -12,137 +13,33 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent }
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-vue-next';
 
-const { vehicles, isLoading, error, fetchVehicles, createVehicle, updateVehicle, deleteVehicle } = useVehicles();
-const { vehicleTypes, fetchVehicleTypes } = useVehicleTypes();
+const router = useRouter();
+const { vehicles, isLoading, error, fetchVehicles, deleteVehicle } = useVehicles();
 
-// Dialog states
-const isCreateDialogOpen = ref(false);
-const isEditDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 const selectedVehicle = ref<Vehicle | null>(null);
 
-// Form data
-const formData = reactive({
-  license: '',
-  status: 'available' as VehicleStatus,
-  vehicle_type_id: 0
-});
+const highlightedVehicleId = ref<number | null>(null);
 
-// Form validation
-const formErrors = reactive({
-  license: '',
-  vehicle_type_id: ''
-});
+const mapCardRef = ref<HTMLElement | null>(null);
 
-// Status options
 const statusOptions = [
-  { value: 'available', label: 'Disponible' },
-  { value: 'using', label: 'En uso' },
-  { value: 'stopped', label: 'Detenido' }
+  { value: 'available', label: 'Available' },
+  { value: 'using', label: 'In Use' },
+  { value: 'stopped', label: 'Stopped' }
 ];
 
-// Reset form
-const resetForm = () => {
-  formData.license = '';
-  formData.status = 'available';
-  formData.vehicle_type_id = 0;
-  formErrors.license = '';
-  formErrors.vehicle_type_id = '';
-};
-
-// Validate form
-const validateForm = (): boolean => {
-  formErrors.license = '';
-  formErrors.vehicle_type_id = '';
-  
-  if (!formData.license.trim()) {
-    formErrors.license = 'La matrícula es obligatoria';
-    return false;
-  }
-  
-  if (formData.license.length > 15) {
-    formErrors.license = 'La matrícula no puede tener más de 15 caracteres';
-    return false;
-  }
-  
-  if (!formData.vehicle_type_id || formData.vehicle_type_id === 0) {
-    formErrors.vehicle_type_id = 'Debe seleccionar un tipo de vehículo';
-    return false;
-  }
-  
-  return true;
-};
-
-// Open create dialog
-const openCreateDialog = () => {
-  resetForm();
-  isCreateDialogOpen.value = true;
-};
-
-// Open edit dialog
-const openEditDialog = (vehicle: Vehicle) => {
-  selectedVehicle.value = vehicle;
-  formData.license = vehicle.license;
-  formData.status = vehicle.status;
-  formData.vehicle_type_id = vehicle.vehicle_type_id;
-  formErrors.license = '';
-  formErrors.vehicle_type_id = '';
-  isEditDialogOpen.value = true;
-};
-
-// Open delete dialog
 const openDeleteDialog = (vehicle: Vehicle) => {
   selectedVehicle.value = vehicle;
   isDeleteDialogOpen.value = true;
 };
 
-// Handle create
-const handleCreate = async () => {
-  if (!validateForm()) return;
-  
-  try {
-    await createVehicle({
-      license: formData.license,
-      status: formData.status,
-      vehicle_type_id: formData.vehicle_type_id
-    });
-    isCreateDialogOpen.value = false;
-    resetForm();
-  } catch (err) {
-    // Error is handled in the composable
-  }
-};
-
-// Handle update
-const handleUpdate = async () => {
-  if (!validateForm() || !selectedVehicle.value) return;
-  
-  try {
-    await updateVehicle(selectedVehicle.value.id, {
-      license: formData.license,
-      status: formData.status,
-      vehicle_type_id: formData.vehicle_type_id
-    });
-    isEditDialogOpen.value = false;
-    resetForm();
-    selectedVehicle.value = null;
-  } catch (err) {
-    // Error is handled in the composable
-  }
-};
-
-// Handle delete
 const handleDelete = async () => {
   if (!selectedVehicle.value) return;
   
@@ -155,24 +52,28 @@ const handleDelete = async () => {
   }
 };
 
-// Format date
+// Scroll to map
+const scrollToMap = () => {
+
+  const element = (mapCardRef.value as any)?.$el || mapCardRef.value;
+  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 const formatDate = (dateString?: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', { 
+  return date.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'short', 
     day: 'numeric' 
   });
 };
 
-// Get status label
 const getStatusLabel = (status: VehicleStatus) => {
   const option = statusOptions.find(opt => opt.value === status);
   return option?.label || status;
 };
 
-// Get status variant
 const getStatusVariant = (status: VehicleStatus): 'default' | 'secondary' | 'destructive' => {
   switch (status) {
     case 'available':
@@ -186,68 +87,134 @@ const getStatusVariant = (status: VehicleStatus): 'default' | 'secondary' | 'des
   }
 };
 
+// Generate fictional GPS coordinates for demonstration
+const deltaCities = [
+  { name: 'Tortosa', lat: 40.8126, lng: 0.5210 },
+  { name: 'Amposta', lat: 40.7098, lng: 0.5793 },
+  { name: 'Sant Carles de la Ràpita', lat: 40.6208, lng: 0.6009 },
+  { name: 'Deltebre', lat: 40.7261, lng: 0.7340 },
+  { name: "L'Aldea", lat: 40.7833, lng: 0.5833 },
+  { name: 'Alcanar', lat: 40.5580, lng: 0.5042 },
+  { name: 'Sant Jaume d\'Enveja', lat: 40.7192, lng: 0.7503 },
+];
+
+// Vehicles with GPS coordinates (reactive for movement simulation)
+const vehiclesWithDemoGPS = ref<Vehicle[]>([]);
+
+const initializeVehiclePositions = () => {
+  vehiclesWithDemoGPS.value = vehicles.value.map((vehicle, index) => {
+    const city = deltaCities[index % deltaCities.length];
+    
+    if (!city) {
+      return vehicle;
+    }
+    
+    const latOffset = (Math.random() - 0.5) * 0.02;
+    const lngOffset = (Math.random() - 0.5) * 0.02;
+    
+    return {
+      ...vehicle,
+      latitude: city.lat + latOffset,
+      longitude: city.lng + lngOffset,
+    };
+  });
+};
+
+// Simulate vehicle movement
+let movementInterval: ReturnType<typeof setInterval> | null = null;
+
+const simulateMovement = () => {
+  movementInterval = setInterval(() => {
+    vehiclesWithDemoGPS.value = vehiclesWithDemoGPS.value.map(vehicle => {
+      if (!vehicle.latitude || !vehicle.longitude) return vehicle;
+      
+      const latChange = (Math.random() - 0.5) * 0.001;
+      const lngChange = (Math.random() - 0.5) * 0.001;
+      
+      return {
+        ...vehicle,
+        latitude: vehicle.latitude + latChange,
+        longitude: vehicle.longitude + lngChange,
+      };
+    });
+  }, 2000);
+};
+
 onMounted(() => {
   fetchVehicles();
-  fetchVehicleTypes();
+  
+  setTimeout(() => {
+    initializeVehiclePositions();
+    simulateMovement();
+  }, 500);
+});
+
+onUnmounted(() => {
+  if (movementInterval) {
+    clearInterval(movementInterval);
+  }
 });
 </script>
 
 <template>
   <div class="space-y-6">
-    <!-- Header with action buttons -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">Vehículos</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Vehicles</h1>
         <p class="text-muted-foreground">
-          Gestiona los vehículos registrados en el sistema.
+          Manage the vehicles registered in the system.
         </p>
       </div>
       <div class="flex gap-2">
         <Button variant="outline" size="icon" @click="fetchVehicles" :disabled="isLoading">
           <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isLoading }" />
         </Button>
-        <Button @click="openCreateDialog">
+        <Button @click="router.push('/app/vehicles/create')">
           <Plus class="mr-2 h-4 w-4" />
-          Nuevo Vehículo
+          New Vehicle
         </Button>
       </div>
     </div>
 
-    <!-- Data Card -->
     <Card>
       <CardHeader>
-        <CardTitle>Listado de Vehículos</CardTitle>
+        <CardTitle>Vehicles List</CardTitle>
         <CardDescription>
-          Se muestran todos los vehículos registrados en el sistema.
+          All vehicles registered in the system are displayed.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <!-- Loading State -->
         <div v-if="isLoading && vehicles.length === 0" class="space-y-2">
           <Skeleton class="h-10 w-full" />
           <Skeleton class="h-10 w-full" />
           <Skeleton class="h-10 w-full" />
         </div>
 
-        <!-- Error State -->
         <div v-else-if="error" class="p-4 text-center text-destructive">
           {{ error }}
         </div>
 
-        <!-- Data Table -->
         <div v-else class="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Matrícula</TableHead>
-                <TableHead>Tipo de Vehículo</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha de creación</TableHead>
-                <TableHead class="text-right">Acciones</TableHead>
+                <TableHead>License Plate</TableHead>
+                <TableHead>Vehicle Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Creation Date</TableHead>
+                <TableHead class="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="vehicle in vehicles" :key="vehicle.id">
+              <TableRow 
+                v-for="vehicle in vehicles" 
+                :key="vehicle.id"
+                @mouseenter="highlightedVehicleId = vehicle.id"
+                @mouseleave="highlightedVehicleId = null"
+                @click="scrollToMap"
+                :class="{ 'bg-blue-50 dark:bg-blue-950': highlightedVehicleId === vehicle.id }"
+                class="transition-colors cursor-pointer"
+              >
                 <TableCell class="font-medium">{{ vehicle.license }}</TableCell>
                 <TableCell>{{ vehicle.vehicle_type?.name || '-' }}</TableCell>
                 <TableCell>
@@ -261,7 +228,7 @@ onMounted(() => {
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      @click="openEditDialog(vehicle)"
+                      @click="router.push(`/app/vehicles/${vehicle.id}/edit`)"
                       :disabled="isLoading"
                     >
                       <Pencil class="h-4 w-4" />
@@ -279,7 +246,7 @@ onMounted(() => {
               </TableRow>
               <TableRow v-if="vehicles.length === 0">
                 <TableCell colspan="5" class="h-24 text-center">
-                  No se encontraron vehículos.
+                  No vehicles found.
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -288,156 +255,39 @@ onMounted(() => {
       </CardContent>
     </Card>
 
-    <!-- Create Dialog -->
-    <Dialog v-model:open="isCreateDialogOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Crear Vehículo</DialogTitle>
-          <DialogDescription>
-            Completa los datos para registrar un nuevo vehículo.
-          </DialogDescription>
-        </DialogHeader>
-        <div class="grid gap-4 py-4">
-          <div class="grid gap-2">
-            <Label for="create-license">Matrícula <span class="text-destructive">*</span></Label>
-            <Input
-              id="create-license"
-              v-model="formData.license"
-              placeholder="Ej: ABC1234"
-              maxlength="15"
-              :class="{ 'border-destructive': formErrors.license }"
-              @input="formErrors.license = ''"
-            />
-            <p v-if="formErrors.license" class="text-sm text-destructive">
-              {{ formErrors.license }}
-            </p>
-          </div>
-          <div class="grid gap-2">
-            <Label for="create-vehicle-type">Tipo de Vehículo <span class="text-destructive">*</span></Label>
-            <Select v-model="formData.vehicle_type_id">
-              <SelectTrigger id="create-vehicle-type" :class="{ 'border-destructive': formErrors.vehicle_type_id }">
-                <SelectValue placeholder="Selecciona un tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="type in vehicleTypes" :key="type.id" :value="type.id">
-                  {{ type.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p v-if="formErrors.vehicle_type_id" class="text-sm text-destructive">
-              {{ formErrors.vehicle_type_id }}
-            </p>
-          </div>
-          <div class="grid gap-2">
-            <Label for="create-status">Estado</Label>
-            <Select v-model="formData.status">
-              <SelectTrigger id="create-status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" @click="isCreateDialogOpen = false" :disabled="isLoading">
-            Cancelar
-          </Button>
-          <Button @click="handleCreate" :disabled="isLoading">
-            <RefreshCw v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-            Crear
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Card ref="mapCardRef">
+      <CardHeader>
+        <CardTitle>Vehicles Map</CardTitle>
+        <CardDescription>
+          Real-time visualization of vehicle locations (demonstration data).
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <VehiclesMap 
+          :vehicles="vehiclesWithDemoGPS" 
+          :highlighted-vehicle-id="highlightedVehicleId"
+          @highlight="highlightedVehicleId = $event"
+        />
+      </CardContent>
+    </Card>
 
-    <!-- Edit Dialog -->
-    <Dialog v-model:open="isEditDialogOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Editar Vehículo</DialogTitle>
-          <DialogDescription>
-            Modifica los datos del vehículo.
-          </DialogDescription>
-        </DialogHeader>
-        <div class="grid gap-4 py-4">
-          <div class="grid gap-2">
-            <Label for="edit-license">Matrícula <span class="text-destructive">*</span></Label>
-            <Input
-              id="edit-license"
-              v-model="formData.license"
-              placeholder="Ej: ABC1234"
-              maxlength="15"
-              :class="{ 'border-destructive': formErrors.license }"
-              @input="formErrors.license = ''"
-            />
-            <p v-if="formErrors.license" class="text-sm text-destructive">
-              {{ formErrors.license }}
-            </p>
-          </div>
-          <div class="grid gap-2">
-            <Label for="edit-vehicle-type">Tipo de Vehículo <span class="text-destructive">*</span></Label>
-            <Select v-model="formData.vehicle_type_id">
-              <SelectTrigger id="edit-vehicle-type" :class="{ 'border-destructive': formErrors.vehicle_type_id }">
-                <SelectValue placeholder="Selecciona un tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="type in vehicleTypes" :key="type.id" :value="type.id">
-                  {{ type.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p v-if="formErrors.vehicle_type_id" class="text-sm text-destructive">
-              {{ formErrors.vehicle_type_id }}
-            </p>
-          </div>
-          <div class="grid gap-2">
-            <Label for="edit-status">Estado</Label>
-            <Select v-model="formData.status">
-              <SelectTrigger id="edit-status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" @click="isEditDialogOpen = false" :disabled="isLoading">
-            Cancelar
-          </Button>
-          <Button @click="handleUpdate" :disabled="isLoading">
-            <RefreshCw v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-            Actualizar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-
-    <!-- Delete Confirmation Dialog -->
     <Dialog v-model:open="isDeleteDialogOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Eliminar Vehículo</DialogTitle>
+          <DialogTitle>Delete Vehicle</DialogTitle>
           <DialogDescription>
-            ¿Estás seguro de que deseas eliminar el vehículo 
+            Are you sure you want to delete the vehicle 
             <strong>{{ selectedVehicle?.license }}</strong>?
-            Esta acción no se puede deshacer.
+            This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" @click="isDeleteDialogOpen = false" :disabled="isLoading">
-            Cancelar
+            Cancel
           </Button>
           <Button variant="destructive" @click="handleDelete" :disabled="isLoading">
             <RefreshCw v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-            Eliminar
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>

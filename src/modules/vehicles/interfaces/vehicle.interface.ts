@@ -8,6 +8,8 @@ export interface Vehicle {
   status: VehicleStatus;
   vehicle_type_id: number;
   vehicle_type?: VehicleType;
+  latitude?: number;
+  longitude?: number;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string;

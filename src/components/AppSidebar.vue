@@ -52,11 +52,11 @@ const data = {
           url: "/app/companies",
         },
         {
-          title: "Tipos de Vehículo",
+          title: "Vehicle Types",
           url: "/app/vehicle-types",
         },
         {
-          title: "Vehículos",
+          title: "Vehicles",
           url: "/app/vehicles",
         },
       ],

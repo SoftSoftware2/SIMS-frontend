@@ -14,7 +14,7 @@ export const useVehicleTypes = () => {
             const { data } = await api.get('/vehicle-types');
             vehicleTypes.value = data.data || data;
         } catch (err: any) {
-            error.value = err.message || 'Error al cargar los tipos de vehículo';
+            error.value = err.message || 'Error loading vehicle types';
             console.error('Error fetching vehicle types:', err);
         } finally {
             isLoading.value = false;
@@ -26,10 +26,10 @@ export const useVehicleTypes = () => {
         error.value = null;
         try {
             const { data } = await api.post('/vehicle-types', vehicleTypeData);
-            await fetchVehicleTypes(); // Refresh the list
+            await fetchVehicleTypes();
             return data;
         } catch (err: any) {
-            error.value = err.response?.data?.message || err.message || 'Error al crear el tipo de vehículo';
+            error.value = err.response?.data?.message || err.message || 'Error creating vehicle type';
             console.error('Error creating vehicle type:', err);
             throw err;
         } finally {
@@ -42,10 +42,10 @@ export const useVehicleTypes = () => {
         error.value = null;
         try {
             const { data } = await api.put(`/vehicle-types/${id}`, vehicleTypeData);
-            await fetchVehicleTypes(); // Refresh the list
+            await fetchVehicleTypes();
             return data;
         } catch (err: any) {
-            error.value = err.response?.data?.message || err.message || 'Error al actualizar el tipo de vehículo';
+            error.value = err.response?.data?.message || err.message || 'Error updating vehicle type';
             console.error('Error updating vehicle type:', err);
             throw err;
         } finally {
@@ -58,9 +58,9 @@ export const useVehicleTypes = () => {
         error.value = null;
         try {
             await api.delete(`/vehicle-types/${id}`);
-            await fetchVehicleTypes(); // Refresh the list
+            await fetchVehicleTypes();
         } catch (err: any) {
-            error.value = err.response?.data?.message || err.message || 'Error al eliminar el tipo de vehículo';
+            error.value = err.response?.data?.message || err.message || 'Error deleting vehicle type';
             console.error('Error deleting vehicle type:', err);
             throw err;
         } finally {

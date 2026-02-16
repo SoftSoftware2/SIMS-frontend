@@ -14,7 +14,7 @@ export const useVehicles = () => {
             const { data } = await api.get('/vehicles');
             vehicles.value = data.data || data;
         } catch (err: any) {
-            error.value = err.message || 'Error al cargar los vehículos';
+            error.value = err.message || 'Error loading vehicles';
             console.error('Error fetching vehicles:', err);
         } finally {
             isLoading.value = false;
@@ -26,10 +26,10 @@ export const useVehicles = () => {
         error.value = null;
         try {
             const { data } = await api.post('/vehicles', vehicleData);
-            await fetchVehicles(); // Refresh the list
+            await fetchVehicles();
             return data;
         } catch (err: any) {
-            error.value = err.response?.data?.message || err.message || 'Error al crear el vehículo';
+            error.value = err.response?.data?.message || err.message || 'Error creating vehicle';
             console.error('Error creating vehicle:', err);
             throw err;
         } finally {
@@ -42,10 +42,10 @@ export const useVehicles = () => {
         error.value = null;
         try {
             const { data } = await api.put(`/vehicles/${id}`, vehicleData);
-            await fetchVehicles(); // Refresh the list
+            await fetchVehicles();
             return data;
         } catch (err: any) {
-            error.value = err.response?.data?.message || err.message || 'Error al actualizar el vehículo';
+            error.value = err.response?.data?.message || err.message || 'Error updating vehicle';
             console.error('Error updating vehicle:', err);
             throw err;
         } finally {
@@ -58,9 +58,9 @@ export const useVehicles = () => {
         error.value = null;
         try {
             await api.delete(`/vehicles/${id}`);
-            await fetchVehicles(); // Refresh the list
+            await fetchVehicles();
         } catch (err: any) {
-            error.value = err.response?.data?.message || err.message || 'Error al eliminar el vehículo';
+            error.value = err.response?.data?.message || err.message || 'Error deleting vehicle';
             console.error('Error deleting vehicle:', err);
             throw err;
         } finally {
