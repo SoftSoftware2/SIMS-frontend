@@ -11,12 +11,12 @@ export const isAuthGuard = (
     const token = cookies.get('token')
 
     if (token) {
-        if (to.path === '/login') {
+        if (to.path === '/') {
             next({name: 'home'})
             return
         }
     } else {
-        if (to.path !== '/login') {
+        if (to.path !== '/') {
             next({name:'login'})
             return
         }

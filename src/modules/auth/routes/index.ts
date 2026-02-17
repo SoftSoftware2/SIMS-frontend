@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 const publicRoutes : RouteRecordRaw[] = [
     {
-        path: '/login',
+        path: '',
         name: 'private',
         component: ()=> import('@/modules/auth/layouts/PrivateLayout.vue'),
         children:[

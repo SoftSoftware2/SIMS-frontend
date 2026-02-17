@@ -4,6 +4,7 @@ import type { SidebarProps } from '@/components/ui/sidebar'
 import {
   Command,
   Building2,
+  Gauge
 } from "lucide-vue-next"
 
 import NavMain from '@/components/NavMain.vue'
@@ -29,6 +30,12 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
+    {
+      title: "Dashboard",
+      url: "/app/home",
+      icon: Gauge,
+      isActive: true,
+    },
     {
       title: "Administración",
       url: "/app",
